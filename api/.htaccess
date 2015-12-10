@@ -1,0 +1,14 @@
+# Check if mod_rewrite rule is available and enabled!
+<IfModule mod_rewrite.c>
+
+# SettingRewrite on
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+
+# Redirecting/routing all the calls from index.php
+RewriteRule ^ index.php [QSA,L]
+
+</IfModule>
+
+# HandlingError 404
+ErrorDocument 404 /404.php
