@@ -52,6 +52,7 @@ class Event {
     {
         settype($this->fee_home,"integer");
         settype($this->fee_remote,"integer");
+        $this->logo = \Udaan\Config::getLogoDirectory().$this->logo;
         $this->is_deleted = 0;
     }
 
@@ -296,7 +297,7 @@ class Event {
      */
     public function setLogo($logo)
     {
-        $this->logo = \Udaan\Config::getLogoDirectory().$logo;
+        $this->logo =$logo;
     }
 
     /**
