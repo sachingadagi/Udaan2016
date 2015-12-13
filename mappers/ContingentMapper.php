@@ -52,6 +52,19 @@ class ContingentMapper
             return FALSE;
         }
     }
+    
+    public function getContingentByLoginId($loginid)
+    {   
+        if(isset($loginid))
+        {
+            $sth = $this->databaseHandler->query("SELECT * FROM contingent_college WHERE loginid = {$loginid} ");
+            $sth->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, 'Contingents');
+            $sth->execute();
+            return $sth->fetch();
+        }
+            return null;       
+    }
+
     public function getContingentObject($id)
     {
         $sth = $this->databaseHandler->query("SELECT * FROM contingent_college WHERE id = {$id}");
@@ -59,6 +72,8 @@ class ContingentMapper
         $sth->execute();
         return $sth->fetch();
     }
+
+
 
     public function createContingent($contingent)
 
@@ -69,6 +84,39 @@ class ContingentMapper
         }
     }
 
+    public function getRegisteredEvents($id)
+    {
+        $allEvents = array();
+        $sth = $this->databaseHandler->query("SELECT * FROM event WHERE id IN (SELECT event_id FROM registered_events_contingent WHERE contingent_id = {$id})");
+        $sth->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, 'EVENT');
+        if ($sth->rowCount() > 0) 
+        {
+            while ($ob = $sth->fetch()) 
+            {
+                array_push($allEvents, $ob);
+            }
+            return $allEvents;
+
+        } 
+        return;  
+    }
+
+    public function getUnregisteredEvents($id)
+    {
+        $allEvents = array();
+        $sth = $this->databaseHandler->query("SELECT * FROM event WHERE id NOT IN (SELECT event_id FROM registered_events_contingent WHERE contingent_id = {$id})");
+        $sth->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, 'EVENT');
+        if ($sth->rowCount() > 0) 
+        {
+            while ($ob = $sth->fetch()) 
+            {
+                array_push($allEvents, $ob);
+            }
+            return $allEvents;
+        } 
+        return ;   
+    }
+
     public function updateContingentProfile($contingent)
     {
         if ($contingent instanceof \Contingents) {
@@ -76,8 +124,8 @@ class ContingentMapper
 
                 #    $sth->execute((array)$event);
                 $sth = $this->databaseHandler->prepare("UPDATE contingent_college SET
-                cl_name = :cl_name,cl_contact= :cl_contact,acl_1_name= :acl_1_name,acl_1_contact = :acl_1_contact,acl_2_name= :acl_2_name,acl_2_contact = :acl_2_contact,cl_email=:cl_email,acl_1_email = :acl_1_email,acl_2_email = :acl_2_email
-                WHERE id = :id ");
+                cl_name = :cl_name,cl_contact= :cl_contact,acl_1_name= :acl_1_name,acl_1_contact = :acl_1_contact,acl_2_name= :acl_2_name,acl_2_contact = :acl_2_contact,cl_email=:cl_email,acl_1_email = :acl_1_email,acl_2_email = :acl_2_email,
+                is_first_login=:is_first_login WHERE id = :id ");
                 $sth->execute(array(
                     ':cl_name' => $contingent->getClName(),
                     ':cl_contact' => $contingent->getClContact(),
@@ -88,6 +136,7 @@ class ContingentMapper
                     ':cl_email' => $contingent->getClEmail(),
                     ':acl_1_email' => $contingent->getAcl1Email(),
                     ':acl_2_email' => $contingent->getAcl2Email(),
+                    ':is_first_login' => $contingent->getIsFirstLogin(),
                     ':id' => $contingent->getId()
 
                 ));

@@ -14,7 +14,7 @@ require_once '../mappers/ContingentMapper.php';
 require_once '../mappers/Registrations.php';
 
 
-
+header('Access-Control-Allow-Origin: *');
 // Autoloading the slim
 \Slim\Slim::registerAutoloader();
 $app = new \Slim\Slim();
@@ -80,7 +80,6 @@ $app->get('/events/all', function () use($app,$eventMapper) {
 
 });
 
-
 /**
  * @api {get} /event/:id Get Event information .
  * @apiName GetUser
@@ -139,6 +138,7 @@ $app->get('/event/:id', function ($id) use($app,$eventMapper) {
     }
     print json_encode($response);
 });
+
 
 $app->post('/event',function() use ($app,$eventMapper){
     $response = array();
@@ -221,12 +221,7 @@ $app->post('/event',function() use ($app,$eventMapper){
     }
     print json_encode($response);
 
-
-
-
 });
-
-
 
 function verifyRequiredParams($required_fields) {
     $error = false;
@@ -400,6 +395,70 @@ $app->get('/registrations/contingents/eventname/:eventname', function ($eventNam
 
 });
 
+$app->get('/events/contingents/:id', function($id) use($app,$contingentMapper) {
+
+    $registered_events = $contingentMapper->getRegisteredEvents($id);
+    $unregistered_events = $contingentMapper->getUnregisteredEvents($id);
+
+    $response = array();
+    if($registered_events || $unregistered_events)
+    {
+        $status = 200;
+        $response["error"] = 0;
+        $response["code"] = $status;
+        $response["registered_events"] = array();
+        $response["unregistered_events"] = array();
+        $response["total_events"] =sizeof($registered_events)+sizeof($unregistered_events);
+        array_push($response["registered_events"], $registered_events);
+        array_push($response["unregistered_events"], $unregistered_events);
+        $app->response->setStatus(200);
+    }
+    else
+    {
+        $status = 204;
+        $response["error"] = 0;
+        $response["total_events"] = 0;
+        $response["message"] = "Oops, Events not found";
+    }
+    print (json_encode($response));
+
+});
+
+$app->post('/login',function() use ($app,$contingentMapper)
+{    
+    $response = array(); 
+    $loginid = $app->request()->post('loginid');
+    $password = $app->request()->post('password');
+    $contingent = $contingentMapper->getContingentByLoginId($loginid);
+    
+    if(isset($contingent))
+    {
+        if($password == $contingent->getPassword())
+        {
+            $status = 200;
+            $response["code"] = $status;
+            $response["error"] = 04;
+            $response["message"] = "Contingent {$contingent->getId() } logged in successfully.";
+            $response["id"] = $contingent->getId();
+        }
+        else
+        {
+            $status = 200;
+            $response["code"] = $status;
+            $response["error"] = 1;
+            $response["error_message"] = "Incorrect Password";
+        }    
+    }
+    else
+    {
+        $response["error"] = 1;
+        $response["error_message"] = "Loginid does not exist"; 
+    }
+    print (json_encode($response));    
+
+});
+
+
 
 $app->put('/contingent/updateprofile/:id', function ($id) use($app,$contingentMapper) {
     $response = array();
@@ -418,8 +477,7 @@ $app->put('/contingent/updateprofile/:id', function ($id) use($app,$contingentMa
     $contingent->setClEmail($app->request->put('cl_email') );
     $contingent->setAcl1Email($app->request->put('acl_1_contact') );
     $contingent->setAcl2Email($app->request->put('acl_2_email') );
-
-
+    $contingent->setIsFirstLogin('no');
 
     if($contingentMapper->updateContingentProfile($contingent))
     {
@@ -438,6 +496,33 @@ $app->put('/contingent/updateprofile/:id', function ($id) use($app,$contingentMa
     }
 
     }else{
+        $response["error"] = 1;
+        $response["error_message"] = "Invalid ID,Expecting numeric ID";
+    }
+
+      print (json_encode($response));
+});
+
+$app->post('/contingent/firstlogin', function () use($app,$contingentMapper) {
+    $response = array();
+    $id = $app->request()->post('id');
+    if(is_numeric($id))
+    {
+    
+        $contingent = $contingentMapper->getContingentObject($id);
+
+
+        if(isset($contingent))
+        {
+
+                $status = 200;
+                $response["code"] = $status;
+                $response["is_first_login"] = $contingent->getIsFirstLogin();
+        }
+        
+    }
+    else
+    {
         $response["error"] = 1;
         $response["error_message"] = "Invalid ID,Expecting numeric ID";
     }
