@@ -43,4 +43,44 @@ class NonContingentMapper
         }
     }
 
+    public function generateNonContingentID(){
+
+
+            $chars = "1234567890";
+            $registration_id = substr( str_shuffle($chars), 0 ,5);
+            return $registration_id;
+
+
+    }
+    public function registerNonContingent($NonContingent)
+    {
+        if ($NonContingent instanceof NonContingents) {
+
+            $generatedID = $this->generateNonContingentID();
+
+            $sth = $this->databaseHandler->prepare("INSERT INTO onspot_noncontingent
+                (name,leader_email,leader_name,leader_contact,leader_2_name,leader_2_contact,registration_id,TYPE)
+              VALUES(:name,:leader_email,:leader_name,:leader_contact,:leader_2_name,:leader_2_contact,:registration_id,:type)");
+
+            $sth->execute(array(
+
+                ':name' => $NonContingent->getName(),
+                ':leader_name' => $NonContingent->getLeaderName(),
+                ':leader_contact' => $NonContingent->getLeaderContact(),
+                ':leader_email' => $NonContingent->getLeaderEmail(),
+
+                ':leader_2_name' => $NonContingent->getLeader2Name(),
+
+                ':leader_2_contact' => $NonContingent->getLeader2Contact(),
+
+                ':registration_id' => $generatedID,
+                ':type' => $NonContingent->getTYPE()
+
+            ));
+            return $generatedID;
+        } else {
+            return FALSE;
+        }
+
+    }
 }
