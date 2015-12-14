@@ -25,7 +25,7 @@ class Contingents {
     public $acl_1_email;
     public $acl_2_email;
     public $is_deleted;
-
+    public $is_first_login;
 
     /**
      * @return mixed
@@ -262,5 +262,17 @@ class Contingents {
     {
         $this->acl_2_contact = $acl_2_contact;
     }
+
+    public function getIsFirstLogin()
+    {
+        return $this->is_first_login;
+    }
+	
+	
+    public function setIsFirstLogin($is_first_login)
+    {
+        $this->is_first_login = $is_first_login;
+    }
+
 
 }
