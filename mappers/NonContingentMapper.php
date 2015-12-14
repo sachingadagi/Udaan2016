@@ -81,6 +81,18 @@ class NonContingentMapper
         } else {
             return FALSE;
         }
-
     }
+        public function getIDByRegistrationID ($registrationID)
+        {
+            $sth = $this->databaseHandler->query("SELECT id FROM onspot_noncontingent WHERE registration_id =  $registrationID");
+            $sth->execute();
+            $ID = $sth->fetchColumn(0);
+
+            if ($ID)
+                return $ID;
+            else
+                return false;
+        }
+
+
 }

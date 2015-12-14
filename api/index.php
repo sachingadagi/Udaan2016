@@ -425,11 +425,13 @@ $app->get('/noncontingents/all', function () use($app,$contingentMapper) {
 
 });
 
-$app->post('/noncontingents/register', function () use($app,$NonContingentMapper) {
+$app->post('/noncontingents/register', function () use($app,$NonContingentMapper,$registrationMapper) {
     $response = array();
 
     verifyRequiredParams(array('name','leader_email','leader_contact','leader_name'));
 
+
+    # PART 1 : Register NoNContingent and generate the ID
     $nonContingent = new \Udaan\NonContingents();
 
     $nonContingent->setName($app->request()->post('name'));
@@ -442,12 +444,39 @@ $app->post('/noncontingents/register', function () use($app,$NonContingentMapper
     $nonContingent->setLeader2Email($app->request()->post('leader_2_email'));
     $nonContingent->setLeader2Name($app->request()->post('leader_2_name'));
     $nonContingent->setTYPE("NC");
-    if($NonContingentMapper->registerNonContingent($nonContingent))
+
+
+
+    $NCGenratedID = $NonContingentMapper->registerNonContingent($nonContingent);
+
+    # PART 2 : Register the events for the given noncontingent
+    if($NCGenratedID)
     {
         $status = 201;
         $response["error"] = 0;
         $response["code"] = $status;
         $response["message"] = "NonContingent Created successfully.";
+
+        $eventIdArray = $app->request->post('eventid');
+        $equipmentArray = $app->request->post('equipments');
+
+        $eventRegDataHolder = array();
+
+        for ( $i =  0 ; $i <  sizeof($eventIdArray) ; $i++ )
+        {
+            if ( isset($eventIdArray[$i])  && $eventIdArray[$i]!="" && isset ( $equipmentArray[$i] ) && $equipmentArray[$i]!="" )
+            {
+                $eventReg["EVENT_ID"] = $eventIdArray[$i];
+                $eventReg["EQUIPMENTS_NEEDED"] = $equipmentArray[$i];
+                $eventRegDataHolder[] = $eventReg;
+            }
+        }
+
+        $id =  $NonContingentMapper ->getIDByRegistrationID($NCGenratedID);
+        if($registrationMapper->registerEventsForNonContingent($id,$eventRegDataHolder))
+        {
+            $response["message"].= "Successfully registered for the events";
+        }
     }
     else
     {
@@ -455,7 +484,10 @@ $app->post('/noncontingents/register', function () use($app,$NonContingentMapper
 
         $response["error_message"] = "Problem";
     }
+
     print json_encode($response);
+
+
 });
 
 

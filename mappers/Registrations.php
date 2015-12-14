@@ -67,4 +67,33 @@ class Registrations {
             return false;
         }
     }
+
+
+    public  function  registerEventsForNonContingent($NCID,$eventRegistrationData)
+    {
+
+
+        try {
+
+
+            for ($i = 0; $i < sizeof($eventRegistrationData); $i++) {
+                $sth = $this->dbh->prepare("INSERT INTO registered_events_onspot_noncontingent (onspot_NC_id,event_id,equipments_needed,regdate)
+            values (:onspot_NC_id,:event_id,:equipments_needed,NOW())");
+                $sth->execute(array(
+                    ':onspot_NC_id' => $NCID,
+                    ':event_id' => $eventRegistrationData[$i]["EVENT_ID"],
+                    ':equipments_needed' => $eventRegistrationData[$i]["EQUIPMENTS_NEEDED"]
+
+                ));
+
+
+            }
+
+
+        }catch (\PDOException $pdoe)
+        {
+            echo $pdoe->getMessage();
+        }
+        return true;
+    }
 }
