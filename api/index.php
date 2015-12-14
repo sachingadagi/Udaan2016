@@ -16,7 +16,7 @@ require_once '../models/NonContingents.class.php';
 require_once '../mappers/NonContingentMapper.php';
 
 
-
+header('Access-Control-Allow-Origin: *');
 // Autoloading the slim
 \Slim\Slim::registerAutoloader();
 $app = new \Slim\Slim();
@@ -49,15 +49,12 @@ $registrationMapper = new \Udaan\Registrations();
  *
  *
  * @apiSuccess {jsonObject} Events JSONObject containing event info & meta info. http://www.jsoneditoronline.org/?id=a1d0eb703336fa4f5eb93a72813c5a06
-
  *
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK
  *
-
  *
  *
-
  */
 $app->get('/events/all', function () use($app,$eventMapper) {
 
@@ -87,7 +84,6 @@ $app->get('/events/all', function () use($app,$eventMapper) {
 
 });
 
-
 /**
  * @api {get} /event/:id Get Event information .
  * @apiName GetUser
@@ -95,7 +91,6 @@ $app->get('/events/all', function () use($app,$eventMapper) {
  *
  * @apiParam {Number} id Event unique ID.
  *
-
  * @apiSuccess {jsonObject} Events JSONObject containing event info & meta info. http://www.jsoneditoronline.org/?id=ad9ceb16c8f68d2892b1abd60cf824d9
  *
  * @apiSuccessExample Success-Response:
@@ -146,6 +141,7 @@ $app->get('/event/:id', function ($id) use($app,$eventMapper) {
     }
     print json_encode($response);
 });
+
 
 $app->post('/event',function() use ($app,$eventMapper){
     $response = array();
@@ -228,10 +224,8 @@ $app->post('/event',function() use ($app,$eventMapper){
     }
     print json_encode($response);
 
-
-
-
 });
+
 
 
 $app->put('/event/:id',function($id) use ($app,$eventMapper){
@@ -286,6 +280,7 @@ $app->put('/event/:id',function($id) use ($app,$eventMapper){
 
 # ================================= END OF EVENTS ====================================
 
+
 function verifyRequiredParams($required_fields) {
     $error = false;
     $error_fields = "";
@@ -324,12 +319,10 @@ function verifyRequiredParams($required_fields) {
  *
  *
  * @apiSuccess {jsonObject} Contingents JSONObject containing contingents info & meta info. http://www.jsoneditoronline.org/?id=a1d0eb703336fa4f5eb93a72813c5a06
-
  *
  * @apiSuccessExample Success-Response:
  *     HTTP/1.1 200 OK
  *
-
  */
 $app->get('/contingents/all', function () use($app,$contingentMapper) {
     $contingents = $contingentMapper->getAllColleges("HIDE_PASSWORD");
@@ -477,14 +470,12 @@ $app->get('/registrations/all', function () use($app,$contingentMapper) {
 
 /**
  * @api {get} /registrations/contingents/event/:event Get Registrations of contingents for given event.
-
  * @apiName GetRegistrationsOfContingentForEvent
  * @apiGroup Registration
  *
  * @apiParam {String } String Event name.
  *
  * @apiSuccess {jsonObject} registrations  All registrations
-
  *
  * @apiSuccessExample Success-Response:
  * HTTP/1.1 200 No registrations for event
@@ -548,7 +539,193 @@ $app->get('/registrations/contingents/event/:event', function ($event) use($app,
 
 
 
-# =================================== END OF REGISTRATIONS ====================================================
+
+# =================================== END OF REGISTRATIONS ===========================================================
+
+$app->get('/events/contingents/:id', function($id) use($app,$contingentMapper) {
+
+    $registered_events = $contingentMapper->getRegisteredEvents($id);
+    $unregistered_events = $contingentMapper->getUnregisteredEvents($id);
+
+    $response = array();
+    if($registered_events || $unregistered_events)
+    {
+        $status = 200;
+        $response["error"] = 0;
+        $response["code"] = $status;
+        $response["registered_events"] = array();
+        $response["unregistered_events"] = array();
+        $response["total_events"] =sizeof($registered_events)+sizeof($unregistered_events);
+        array_push($response["registered_events"], $registered_events);
+        array_push($response["unregistered_events"], $unregistered_events);
+        $app->response->setStatus(200);
+    }
+    else
+    {
+        $status = 204;
+        $response["error"] = 0;
+        $response["total_events"] = 0;
+        $response["message"] = "Oops, Events not found";
+    }
+    print (json_encode($response));
+
+});
+
+$app->post('/login',function() use ($app,$contingentMapper)
+{    
+    $response = array(); 
+    $loginid = $app->request()->post('loginid');
+    $password = $app->request()->post('password');
+    $contingent = $contingentMapper->getContingentByLoginId($loginid);
+    
+    if($contingent instanceof Contingents)
+    {
+        if($password == $contingent->getPassword())
+        {
+            $status = 200;
+            $response["code"] = $status;
+            $response["error"] = 04;
+            $response["message"] = "Contingent {$contingent->getId() } logged in successfully.";
+            $response["id"] = $contingent->getId();
+        }
+        else
+        {
+            $status = 200;
+            $response["code"] = $status;
+            $response["error"] = 1;
+            $response["error_message"] = "Incorrect Password";
+        }    
+    }
+    else
+    {
+        $response["error"] = 1;
+        $response["error_message"] = "Loginid does not exist"; 
+    }
+    print (json_encode($response));    
+
+});
+
+
+
+$app->put('/contingent/updateprofile/:id', function ($id) use($app,$contingentMapper) {
+    $response = array();
+    if(is_numeric($id))
+    {
+    verifyRequiredParams(array('cl_name','cl_contact','acl_1_name','acl_1_contact','acl_2_name','acl_2_contact'));
+
+    $contingent = $contingentMapper->getContingentObject($id);
+
+    $contingent->setAcl1Name($app->request->put('acl_1_name'));
+    $contingent->setAcl1Contact($app->request->put('acl_1_contact'));
+    $contingent->setAcl2Name($app->request->put('acl_2_name'));
+    $contingent->setAcl2Contact($app->request->put('acl_2_contact'));
+    $contingent->setClName($app->request->put('cl_name'));
+    $contingent->setClContact($app->request->put('cl_contact') );
+    $contingent->setClEmail($app->request->put('cl_email') );
+    $contingent->setAcl1Email($app->request->put('acl_1_contact') );
+    $contingent->setAcl2Email($app->request->put('acl_2_email') );
+    $contingent->setIsFirstLogin('no');
+
+    if($contingentMapper->updateContingentProfile($contingent))
+    {
+
+            $status = 200;
+            $response["code"] = $status;
+            $response["message"] = "Contingent {$contingent->getId() } updated successfully.";
+    }
+    else
+    {
+            $status = 200;
+            $response["code"] = $status;
+
+            $response["error"] = 1;
+            $response["error_message"] = "Some error occured while updating contingent {$contingent->getId()}.";
+    }
+
+    }else{
+        $response["error"] = 1;
+        $response["error_message"] = "Invalid ID,Expecting numeric ID";
+    }
+
+      print (json_encode($response));
+});
+
+$app->post('/contingent/firstlogin', function () use($app,$contingentMapper) {
+    $response = array();
+    $id = $app->request()->post('id');
+    if(is_numeric($id))
+    {
+    
+        $contingent = $contingentMapper->getContingentObject($id);
+
+
+        if($contingent instanceof Contingents)
+        {
+
+                $status = 200;
+                $response["code"] = $status;
+                $response["is_first_login"] = $contingent->getIsFirstLogin();
+        }
+        
+    }
+    else
+    {
+        $response["error"] = 1;
+        $response["error_message"] = "Invalid ID,Expecting numeric ID";
+    }
+
+      print (json_encode($response));
+});
+
+
+$app->put('/event/:id',function($id) use ($app,$eventMapper){
+    verifyRequiredParams(array('id','logo'));
+
+    $event = new Event();
+    $event->setId($id);
+    $event->setName($app->request()->put('name'));
+    $event->setDetails($app->request()->put('details'));
+    $event->setSlogan($app->request()->put('slogan'));
+    $event->setCategory($app->request()->put('type'));
+    $event->setRules($app->request()->put('rules'));
+    $event->setStartDate($app->request()->put('start_date'));
+    $event->setEndDate($app->request()->put('end_date'));
+    $event->setStartTime($app->request()->put('start_time'));
+    $event->setEndTime($app->request()->put('end_time'));
+    $event->setGroupSize($app->request()->put('group_size'));
+    $event->setLogo($app->request()->put('logo'));
+
+    # --Getting the put vars and typecasting to int. Blehhh. Can't help, its PHP xD
+    $feeHome = $app->request()->put('fee_home');
+    settype($feeHome,"integer");
+    $feeRemote = $app->request()->put('fee_remote');
+    settype($feeRemote,"integer");
+    #--
+
+    $event->setFeeHome($feeHome);
+    $event->setFeeRemote($feeRemote);
+    $event->setLocation($app->request()->put('location'));
+    $event->setEventHeadName($app->request()->put('event_head_name'));
+    $event->setEventHeadContact($app->request()->put('event_head_contact'));
+    $event->setAward($app->request()->put('award'));
+    $event->setEquipmentProvided($app->request()->put('equipments_provided'));
+
+    if($eventMapper->updateEvent($event))
+    {
+        $status = 200;
+        $response["code"] = $status;
+        $response["message"] = "Event {$event->getId() } updated successfully.";
+    }else
+    {
+        $status = 200;
+        $response["code"] = $status;
+        $response["message"] = "Some error occured while updating event {$event->getId()}.";
+    }
+    print (json_encode($response));
+
+
+
+});
 
 
 
