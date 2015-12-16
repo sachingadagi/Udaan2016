@@ -14,6 +14,8 @@ require_once '../mappers/ContingentMapper.php';
 require_once '../mappers/Registrations.php';
 require_once '../models/NonContingents.class.php';
 require_once '../mappers/NonContingentMapper.php';
+require_once '../mappers/OnSpotMapper.php';
+require_once '../models/Onspot.class.php';
 
 
 header('Access-Control-Allow-Origin: *');
@@ -37,6 +39,8 @@ $NonContingentMapper = new \Udaan\NonContingentMapper();
 //Registrations mapper
 $registrationMapper = new \Udaan\Registrations();
 
+// Onspot Mapper
+$onSpotMapper = new \Udaan\OnSpotMapper();
 
 // ALL of the functions that respond according to request depending upon URL requests,begin here.
 
@@ -459,15 +463,17 @@ $app->post('/noncontingents/register', function () use($app,$NonContingentMapper
 
         $eventIdArray = $app->request->post('eventid');
         $equipmentArray = $app->request->post('equipments');
+        $teamsizeArray = $app->request->post('teamsize');
 
         $eventRegDataHolder = array();
 
         for ( $i =  0 ; $i <  sizeof($eventIdArray) ; $i++ )
         {
-            if ( isset($eventIdArray[$i])  && $eventIdArray[$i]!="" && isset ( $equipmentArray[$i] ) && $equipmentArray[$i]!="" )
+            if ( isset($eventIdArray[$i])  && $eventIdArray[$i]!="" && isset ( $teamsizeArray[$i] ) && $teamsizeArray[$i]!="" )
             {
                 $eventReg["EVENT_ID"] = $eventIdArray[$i];
                 $eventReg["EQUIPMENTS_NEEDED"] = $equipmentArray[$i];
+                $eventReg["TEAM_SIZE"] = $teamsizeArray[$i];
                 $eventRegDataHolder[] = $eventReg;
             }
         }
@@ -493,6 +499,78 @@ $app->post('/noncontingents/register', function () use($app,$NonContingentMapper
 
 # ==========================  END OF NON CONTINGENTS===============================================
 
+
+#=============================== ONSPOT =================================
+
+$app->post('/onspot/register', function () use($app,$onSpotMapper,$registrationMapper) {
+    $response = array();
+
+    verifyRequiredParams(array('name','leader_email','leader_contact','leader_name'));
+
+
+    # PART 1 : Register NoNContingent and generate the ID
+    $onspot = new \Udaan\Onspot();
+
+    $onspot->setName($app->request()->post('name'));
+    $onspot->setLeaderName($app->request()->post('leader_name'));
+    $onspot->setLeaderEmail($app->request()->post('leader_email'));
+    $onspot->setLeaderContact($app->request()->post('leader_contact'));
+
+    #Optional parameters
+    $onspot->setLeader2Contact($app->request()->post('leader_2_contact'));
+    $onspot->setLeader2Email($app->request()->post('leader_2_email'));
+    $onspot->setLeader2Name($app->request()->post('leader_2_name'));
+    $onspot->setTYPE("OS");
+
+
+
+    $OSGeneratedID = $onSpotMapper->registerOnSpot($onspot);
+
+    # PART 2 : Register the events for the given Onspot
+    if($OSGeneratedID)
+    {
+        $status = 201;
+        $response["error"] = 0;
+        $response["code"] = $status;
+        $response["message"] = "Onspot entry created successfully.";
+
+        $eventIdArray = $app->request->post('eventid');
+        $teamsizeArray = $app->request->post('teamsize');
+
+        $eventRegDataHolder = array();
+
+        for ( $i =  0 ; $i <  sizeof($eventIdArray) ; $i++ )
+        {
+            if ( isset($eventIdArray[$i])  && $eventIdArray[$i]!="" && isset ( $teamsizeArray[$i] ) && $teamsizeArray[$i]!="" )
+            {
+                $eventReg["EVENT_ID"] = $eventIdArray[$i];
+                $eventReg["TEAM_SIZE"] = $teamsizeArray[$i];
+                $eventRegDataHolder[] = $eventReg;
+            }
+        }
+
+        $id =  $onSpotMapper ->getIDByRegistrationID($OSGeneratedID);
+        if($registrationMapper->registerEventsForOnSpot($id,$eventRegDataHolder))
+        {
+            $response["message"].= "Successfully registered for the events";
+        }
+    }
+    else
+    {
+        $response["error"] = 1;
+
+        $response["error_message"] = "Problem";
+    }
+
+    print json_encode($response);
+
+
+});
+
+# ==========================  ON THE SPOT ===================================
+
+
+#============================================================================
 
 # ========================== REGISTRATIONS===========================================================
 
