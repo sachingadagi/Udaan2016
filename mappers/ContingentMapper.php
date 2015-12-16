@@ -167,4 +167,17 @@ class ContingentMapper
 
     }
 
+    public function contingentExists($cid)
+    {
+        $sth = $this->databaseHandler->query("SELECT * from  contingent_college WHERE loginid = $cid ");
+        $sth->setFetchMode(PDO::FETCH_ASSOC);
+
+        if ($sth->rowCount() > 0) {
+            return true;
+        }
+        else{
+            return false;
+        }
+    }
+
 }

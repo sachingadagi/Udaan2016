@@ -393,6 +393,7 @@ $app->put('/contingent/updateprofile/:id', function ($id) use($app,$contingentMa
 
     print (json_encode($response));
 });
+
 $app->get('/registrations/contingents/eventname/:eventname', function ($eventName) use($app,$registrationMapper) {
     $response = array();
     if($registrationMapper->eventExists($eventName))
@@ -421,6 +422,100 @@ $app->get('/registrations/contingents/eventname/:eventname', function ($eventNam
 
 });
 
+$app->post('/contingent/register/event', function () use($app,$registrationMapper,$eventMapper,$contingentMapper){
+
+    $response =  array();
+    verifyRequiredParams(array('contingentLoginID','eventID','teamsize','equipments'));
+
+    $cid =$app->request->post('contingentLoginID');
+    $eid= $app->request->post('eventID');
+    $teamsize = $app->request->post('teamsize');
+    $equipments = $app->request->post('equipments');
+
+    if(!$registrationMapper->eventExistsByID($eid))
+    {
+        $response["error"] = 1 ;
+        $response["error_message"] = "No event by id {$eid} exists";
+    }
+    else
+    {
+        if(!$contingentMapper -> contingentExists($cid))
+        {
+            $response["error"] = 1 ;
+            $response["error_message"] = "No contingent by id {$cid} exists";
+        }
+        else
+        {
+            $contingentID = null;
+            $contingent = $contingentMapper->getContingentByLoginId($cid);
+            if($contingent instanceof Contingents)  $contingentID =  $contingent->getId();
+            else $contingentID = $contingent["id"];
+            if($registrationMapper->registerEventForContingent($contingentID,$eid,$teamsize,$equipments))
+            {
+                $response["error"] = 0;
+                $response["message"] = "Successfully registered event";
+            }
+            else
+            {
+                $response["error"] = 1;
+                $response["message"] = "Error.";
+            }
+
+        }
+    }
+
+    print json_encode($response);
+
+
+});
+
+
+$app->delete('/contingent/register/event/:event/?loginid=:contingentloginid', function ($event,$contingentloginid) use($app,$registrationMapper,$eventMapper,$contingentMapper){
+
+    $response =  array();
+   # verifyRequiredParams(array('contingentLoginID','eventID'));
+
+   # $cid =$app->request->delete('contingentLoginID');
+  # $eid= $app->request->delete('eventID');
+
+    $eid = $event;
+    $contingent =$contingentloginid;
+    if(!$registrationMapper->eventExistsByID($eid))
+    {
+        $response["error"] = 1 ;
+        $response["error_message"] = "No event by id {$eid} exists";
+    }
+    else
+    {
+        if(!$contingentMapper -> contingentExists($contingentloginid))
+        {
+            $response["error"] = 1 ;
+            $response["error_message"] = "No contingent by id {$contingentloginid} exists";
+        }
+        else
+        {
+            $contingentID = null;
+            $contingent = $contingentMapper->getContingentByLoginId($contingentloginid);
+            if($contingent instanceof Contingents)  $contingentID =  $contingent->getId();
+            else $contingentID = $contingent["id"];
+            if($registrationMapper->UnregisterEventForContingent($contingentID,$eid))
+            {
+                $response["error"] = 0;
+                $response["message"] = "Successfully unregistered event";
+            }
+            else
+            {
+                $response["error"] = 1;
+                $response["message"] = "Error.";
+            }
+
+        }
+    }
+
+    print json_encode($response);
+
+
+});
 # =============================END OF CONTINGENTS================================================
 
 
