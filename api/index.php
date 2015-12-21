@@ -588,6 +588,52 @@ $app->post('/contingent/register/event', function () use($app,$registrationMappe
 
 });
 
+$app->post('/contingent/update/event', function () use($app,$registrationMapper,$eventMapper,$contingentMapper){
+
+    $response =  array();
+
+    verifyRequiredParams(array('contingentLoginID','eventID','teamsize','equipments'));
+    $cid =$app->request->post('contingentLoginID');
+    $eid= $app->request->post('eventID');
+    $teamsize = $app->request->post('teamsize');
+    $equipments = $app->request->post('equipments');
+
+    if(!$registrationMapper->eventExistsByID($eid))
+    {
+        $response["error"] = 1 ;
+        $response["error_message"] = "No event by id {$eid} exists";
+    }
+    else
+    {
+        if(!$contingentMapper -> contingentExists($cid))
+        {
+            $response["error"] = 1 ;
+            $response["error_message"] = "No contingent by id {$cid} exists";
+        }
+        else
+        {
+            $contingentID = null;
+            $contingent = $contingentMapper->getContingentByLoginId($cid);
+            if($contingent instanceof Contingents)  $contingentID =  $contingent->getId();
+            else $contingentID = $contingent["id"];
+            if($registrationMapper->updateEventForContingent($contingentID,$eid,$teamsize,$equipments))
+            {
+                $response["error"] = 0;
+                $response["message"] = "Successfully updated registered event";
+            }
+            else
+            {
+                $response["error"] = 1;
+                $response["message"] = "Error.";
+            }
+
+        }
+    }
+
+    print json_encode($response);
+
+
+});
 
 $app->delete('/contingent/register/event/:event/?loginid=:contingentloginid', function ($event,$contingentloginid) use($app,$registrationMapper,$eventMapper,$contingentMapper){
 

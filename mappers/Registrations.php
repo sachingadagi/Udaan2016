@@ -174,4 +174,29 @@ class Registrations {
         }
         return true;
     }
+
+    public function updateEventForContingent($contingentID, $eid, $teamsize, $equipments)
+    {
+        try {
+
+        $sth = $this->dbh->prepare("UPDATE  registered_events_contingent SET  equipments_needed = :equipments_needed,number_of_participants=:number_of_participants
+                                WHERE contingent_id = :contingent_id AND event_id= :event_id");
+
+        $sth->execute(array(
+            ':contingent_id' => $contingentID,
+            ':event_id' => $eid,
+            ':equipments_needed' => $equipments,
+            ':number_of_participants' =>  $teamsize
+
+        ));
+
+
+
+    }catch (\PDOException $pdoe)
+        {
+            echo $pdoe->getMessage();
+            return false;
+        }
+        return true;
+    }
 }
