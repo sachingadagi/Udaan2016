@@ -16,7 +16,7 @@ require_once '../models/NonContingents.class.php';
 require_once '../mappers/NonContingentMapper.php';
 require_once '../mappers/OnSpotMapper.php';
 require_once '../models/Onspot.class.php';
-
+require_once '../mappers/coordinatorMapper.php';
 
 header('Access-Control-Allow-Origin: *');
 // Autoloading the slim
@@ -41,6 +41,9 @@ $registrationMapper = new \Udaan\Registrations();
 
 // Onspot Mapper
 $onSpotMapper = new \Udaan\OnSpotMapper();
+
+//Coordinator Mapper
+$coordinatorMapper = new \Udaan\CoordinatorMapper();
 
 // ALL of the functions that respond according to request depending upon URL requests,begin here.
 
@@ -283,7 +286,123 @@ $app->put('/event/:id',function($id) use ($app,$eventMapper){
 
 
 # ================================= END OF EVENTS ====================================
+/////////////////////////////////////////////////// Vaibhav Coordinator Part
 
+$app->get('/coordinators/all', function() use($app,$coordinatorMapper) {
+
+    $allCoordinators = $coordinatorMapper->getAllCoordinators();
+
+    $response = array();
+
+    if($allCoordinators) {
+
+        $status = 200;
+        $response["error"] = 0;
+        $response["code"] = $status;
+        $response["coordinators"] = array();
+        $response["total_coordinators"] =sizeof($allCoordinators);
+        array_push($response["coordinators"], $allCoordinators);
+        $app->response->setStatus(200);
+    }else{
+
+        $status = 204;
+        $response["error"] = 0;
+        $response["total_coordinators"] = 0;
+        $response["message"] = "Oops, Coordinators not found";
+        //$app->response->setStatus(204);
+
+    }
+    print json_encode($response);
+
+});
+
+$app->get('/coordinator/:id', function ($id) use($app,$coordinatorMapper) {
+
+    $response = array();
+
+    if(!is_numeric($id))
+    {
+        $status = 204;
+        $response["code"] = 204;
+        $response["error"]= 1;
+        $response["error_message"] = "Oops, Invalid ID. ID should be numeric";
+    }
+    else
+    {
+        $Coordinator = $coordinatorMapper->getCoordinator($id);
+
+        if ($Coordinator) {
+
+            $status = 200;
+            $response["code"] = $status;
+            $response["coordinators"] = $Coordinator;
+            $response["error"]= 0;
+            $app->response->setStatus(200);
+
+        } else {
+
+            $status = 204;
+            $response["code"] = 204;
+            $response["error"] = 1;
+            $response["message"] = "Oops, Coordinator by id {$id} not found";
+            //$app->response->setStatus(204);
+        }
+    }
+    print json_encode($response);
+});
+
+
+$app->post('/coordinator',function() use ($app,$coordinatorMapper){
+    $response = array();
+
+    verifyRequiredParams(array('name'));
+
+    $coordinator = new Coordinator();
+    $coordinator->setRole($app->request()->post('role'));
+    $coordinator->setName($app->request()->post('name'));
+    $coordinator->setEventName($app->request()->post('event_name'));
+    $coordinator->setContactNo($app->request()->post('contact_no'));
+
+    if($coordinatorMapper->createCoordinator($coordinator))
+    {
+        $status = 201;
+        $response["error"] = 0;
+        $response["code"] = $status;
+        $response["message"] = "Coordinator Created successfully.";
+    }
+    print json_encode($response);
+
+});
+
+$app->put('/coordinator/:id',function($id) use ($app,$coordinatorMapper){
+    //verifyRequiredParams(array('id','logo'));
+
+    $coordinator = new Coordinator();
+    $coordinator->setId($id);
+    $coordinator->setRole($app->request()->put('role'));
+    $coordinator->setName($app->request()->put('name'));
+    $coordinator->setEventName($app->request()->put('event_name'));
+    $coordinator->setContactNo($app->request()->put('contact_no'));
+    if($coordinatorMapper->updateCoordinator($coordinator))
+    {
+        $status = 200;
+        $response["code"] = $status;
+        $response["message"] = "Coordinator {$coordinator->getId() } updated successfully.";
+    }else
+    {
+        $status = 200;
+        $response["code"] = $status;
+        $response["message"] = "Some error occured while updating coordinator {$coordinator->getId()}.";
+    }
+    print (json_encode($response));
+
+
+
+});
+
+
+
+////////////////////////////////////////////////end Vaibhav;
 
 function verifyRequiredParams($required_fields) {
     $error = false;
@@ -498,6 +617,8 @@ $app->delete('/contingent/register/event/:event/?loginid=:contingentloginid', fu
             $contingent = $contingentMapper->getContingentByLoginId($contingentloginid);
             if($contingent instanceof Contingents)  $contingentID =  $contingent->getId();
             else $contingentID = $contingent["id"];
+
+
             if($registrationMapper->UnregisterEventForContingent($contingentID,$eid))
             {
                 $response["error"] = 0;

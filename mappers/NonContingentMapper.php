@@ -28,7 +28,7 @@ class NonContingentMapper
     public function getAll()
     {
         $allColleges = array();
-        $sth = $this->databaseHandler->query("SELECT * FROM onspot_noncontingent WHERE TYPE = 'OS' ");
+        $sth = $this->databaseHandler->query("SELECT * FROM onspot_noncontingent WHERE TYPE = 'NC' ");
         #  $sth->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE,'Event');
 
         if ($sth->rowCount() > 0) {

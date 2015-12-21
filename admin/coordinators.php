@@ -1,17 +1,17 @@
 <!doctype html>
 <?php
-session_start();
-if(!isset($_SESSION['username'])){
-header("location:index.php");
-}
-include('db.php');
-//$query=mysql_query("SELECT * FROM contingent_college");
+//session_start();
+//if(!isset($_SESSION['username'])){
+//header("location:index.php");
+//}
+//include('db.php');
+//$query=mysql_query("SELECT * FROM events");
 $root = realpath($_SERVER["DOCUMENT_ROOT"]);
-require_once "$root/Udaan2016/fms/mappers/ContingentMapper.php";
+require_once "$root/Udaan2016/fms/mappers/CoordinatorMapper.php";
 
-$ContingentMapper = new \Udaan\ContingentMapper();
+$coordinatorMapper = new \Udaan\CoordinatorMapper();
 
-$result = ($ContingentMapper->getAllColleges());
+$result = ($coordinatorMapper->getAllCoordinators());
 
 ?>
 
@@ -67,6 +67,7 @@ $result = ($ContingentMapper->getAllColleges());
   
   	<!-- NAVIGATION MENU -->
 
+    
     <div class="navbar-nav navbar-inverse navbar-fixed-top">
         <div class="container">
         <div class="navbar-header">
@@ -79,6 +80,7 @@ $result = ($ContingentMapper->getAllColleges());
         </div> 
           <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
+
                 <li><a href="college.php"><i class="icon-calendar icon-white"></i> Contingent</a></li>
                 <li><a href="noncontingent.php"><i class="icon-calendar icon-white"></i> Non Contingent</a></li>
                 <li><a href="onspot.php"><i class="icon-calendar icon-white"></i> OnSpot</a></li>
@@ -86,54 +88,54 @@ $result = ($ContingentMapper->getAllColleges());
                 <li><a href="reports.php"><i class="icon-th icon-white"></i> Reports</a></li>
                 <li><a href="coordinators.php"><i class="icon-th icon-white"></i> Coordinator</a></li>
                 <li><a href="logout.php"><i class="icon-lock icon-white"></i> Logout</a></li>
-              
             </ul>
           </div><!--/.nav-collapse -->
         </div>
     </div>
-
-    <div class="container">
+<div class="container">
 
       <!-- CONTENT -->
 	<div class="row">
 
 
-		<h4><strong>Contingent Registration</strong></h4>
-            <a  href="registercollege.php" class="btn btn-primary" style="float:left; width:18%;margin-top:20px;">Register college</a>
+		<h4><strong>Coordinators</strong></h4>
+            <a href="coordinator_reg.php" class="btn btn-primary" style="float:left; width:18%;margin-top:20px;">Register Coordinator</a>
     <br>
 
+        <table class="display" id="dt1">
+            <thead>
+            <tr>
+                <th>Role</th>
+                <th>Name</th>
+                <th>Event Name</th>
+                <th>Contact No</th>
+                <th>Update</th>
+                <th>Delete</th>
+            </tr>
+            </thead>
+            <tbody>
+            <?php
+            //print_r($result);
+            //$r = $result[0];
+          foreach($result as $row) {
+                echo "<tr>";
+                echo "<td>$row[role]</td>"; 
+                echo "<td>$row[name]</td>"; 
+                echo "<td>$row[event_name]</td>";
+                echo "<td>$row[contact_no]</td>";
+                echo '<td><a href="updatecoordinator.php?coordinator='.$row[0].'">'.'Update'.'</a></td>';            //winnercontact
+
+                echo '<td><a href="deletecoordinator.php?coordinator='.$row[0].'">'.'Delete'.'</a></td>';
+                echo "</tr>";
+            }
+            ?>
+            </tbody>
+        </table><!--/END SECOND TABLE -->
 
 
-		<table class="display" id="dt1">
-        <thead>  
-          <tr>  
-            <th>Name</th>  
-            <th>Login ID</th>
-            <th>Password</th>   
-                                    <th>Update</th>
-                        <th>Delete</th> 
 
-                         
-          </tr>  
-        </thead>  
-        <tbody>  
-                <?php
-                foreach($result as $row) {
-          
-                        echo "<td>$row[1]</td>";            //slogan    
-              echo "<td>$row[2]</td>";            //timing
-              echo "<td>$row[3]</td>";          
-                            echo '<td><a href="updatecollege.php?event='.$row[1].'">'.'Update'.'</a></td>';            //winnercontact
-              
-              echo '<td><a href="deletecollege.php?event='.$row[0].'">'.'Delete'.'</a></td>';
-  //groupsize
-              echo "</tr>";  
-                    }  
-                ?>  
-        </tbody>  
-            </table><!--/END SECOND TABLE -->
-	
-		</div><!--/span12 -->
+
+    </div><!--/span12 -->
       </div><!-- /row -->
      </div> <!-- /container -->
     	<br>	
