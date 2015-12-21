@@ -635,6 +635,54 @@ $app->post('/contingent/update/event', function () use($app,$registrationMapper,
 
 });
 
+#Trying same stuff here^ using PUT
+$app->put('/contingent/update/event', function () use($app,$registrationMapper,$eventMapper,$contingentMapper){
+
+    $response =  array();
+
+    verifyRequiredParams(array('contingentLoginID','eventID','teamsize','equipments'));
+    $cid =$app->request->put('contingentLoginID');
+    $eid= $app->request->put('eventID');
+    $teamsize = $app->request->put('teamsize');
+    $equipments = $app->request->put('equipments');
+
+    if(!$registrationMapper->eventExistsByID($eid))
+    {
+        $response["error"] = 1 ;
+        $response["error_message"] = "No event by id {$eid} exists";
+    }
+    else
+    {
+        if(!$contingentMapper -> contingentExists($cid))
+        {
+            $response["error"] = 1 ;
+            $response["error_message"] = "No contingent by id {$cid} exists";
+        }
+        else
+        {
+            $contingentID = null;
+            $contingent = $contingentMapper->getContingentByLoginId($cid);
+            if($contingent instanceof Contingents)  $contingentID =  $contingent->getId();
+            else $contingentID = $contingent["id"];
+            if($registrationMapper->updateEventForContingent($contingentID,$eid,$teamsize,$equipments))
+            {
+                $response["error"] = 0;
+                $response["message"] = "Successfully updated registered event";
+            }
+            else
+            {
+                $response["error"] = 1;
+                $response["message"] = "Error.";
+            }
+
+        }
+    }
+
+    print json_encode($response);
+
+
+});
+
 $app->delete('/contingent/register/event/:event/?loginid=:contingentloginid', function ($event,$contingentloginid) use($app,$registrationMapper,$eventMapper,$contingentMapper){
 
     $response =  array();
@@ -1099,7 +1147,32 @@ $app->put('/event/:id',function($id) use ($app,$eventMapper){
 
 });
 
+# ============================= ANALYSIS & VISUALIZATION =================
 
+$app->get('/count/registrations/events',function() use ($app,$registrationMapper){
+
+
+
+    $response = array();
+    $result = $registrationMapper->getCountOfRegistrationAllEvents();
+    if($result)
+    {
+        $response["result"] = $result;
+        $response["error"] = 0;
+    }
+    else
+    {
+
+        $response["error"] = 1;
+    }
+    print (json_encode($response));
+
+
+
+});
+
+
+# =======================================================================
 
 
 $app->notFound(function () {

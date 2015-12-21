@@ -199,4 +199,32 @@ class Registrations {
         }
         return true;
     }
+
+    public function getCountOfRegistrationAllEvents()
+    {
+        try {
+
+            $r = array();
+            $sth = $this->dbh->query("SELECT e.name as label,COUNT(*)as value FROM `registered_events_contingent` r INNER JOIN event e ON e.id = r.event_id GROUP BY event_id");
+             $sth->setFetchMode(PDO::FETCH_ASSOC);
+
+            if ($sth->rowCount() > 0) {
+                while ($ob = $sth->fetch()) {
+                    array_push($r, $ob);
+                }
+
+                return $r;
+
+            } else {
+                return FALSE;
+            }
+
+
+        }catch (\PDOException $pdoe)
+        {
+            echo $pdoe->getMessage();
+            return false;
+        }
+        return true;
+    }
 }
