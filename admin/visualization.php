@@ -1,17 +1,17 @@
 <!doctype html>
 <?php
-session_start();
-if(!isset($_SESSION['username'])){
-    header("location:index.php");
-}
-include('db.model.php');
-//$query=mysql_query("SELECT * FROM contingent_college");
+//session_start();
+//if(!isset($_SESSION['username'])){
+//header("location:index.php");
+//}
+//include('db.php');
+//$query=mysql_query("SELECT * FROM events");
 $root = realpath($_SERVER["DOCUMENT_ROOT"]);
-require_once "$root/Udaan2016/fms/utilities/Database.class.php";
-require_once "$root/Udaan2016/fms/mappers/OnSpotMapper.php";
-$OS = new \Udaan\OnSpotMapper();
+require_once "$root/Udaan2016/fms/mappers/EventMapper.php";
 
-$result = ($OS->getAll());
+$eventMapper = new \Udaan\EventMapper();
+
+$result = ($eventMapper->getAllEvents());
 
 ?>
 
@@ -67,6 +67,7 @@ $result = ($OS->getAll());
 
 <!-- NAVIGATION MENU -->
 
+
 <div class="navbar-nav navbar-inverse navbar-fixed-top">
     <div class="container">
         <div class="navbar-header">
@@ -91,44 +92,17 @@ $result = ($OS->getAll());
         </div><!--/.nav-collapse -->
     </div>
 </div>
-
 <div class="container">
 
     <!-- CONTENT -->
     <div class="row">
 
+    <!-- Visualization -->
+        <div id="chart">
 
-        <h4><strong>On Spot Registrations</strong></h4>
-        <br>
+        </div>
 
-
-
-        <table class="display" id="dt1">
-            <thead>
-            <tr>
-                <th>Name</th>
-                <th>Leader Name</th>
-                <th>Contact</th>
-
-
-            </tr>
-            </thead>
-            <tbody>
-            <?php
-            foreach($result as $row) {
-
-                echo "<td>$row[1]</td>";            //slogan
-                echo "<td>$row[3]</td>";            //timing
-                echo "<td>$row[4]</td>";
-                // echo '<td><a href="updatecollege.php?event='.$row[1].'">'.'Update'.'</a></td>';            //winnercontact
-
-                // echo '<td><a href="deletecollege.php?event='.$row[0].'">'.'Delete'.'</a></td>';
-                //groupsize
-                echo "</tr>";
-            }
-            ?>
-            </tbody>
-        </table><!--/END SECOND TABLE -->
+    <!-- VIZ-->
 
     </div><!--/span12 -->
 </div><!-- /row -->
@@ -140,6 +114,17 @@ $result = ($OS->getAll());
 <!-- Placed at the end of the document so the pages load faster -->
 <script type="text/javascript" src="assets/js/bootstrap.js"></script>
 <script type="text/javascript" src="assets/js/admin.js"></script>
+<script type="text/javascript" src="js/d3.min.js"></script>
+<script type="text/javascript" src="assets/js/customviz.js"></script>
 
+<script type="text/javascript">
+    var r;
+    $.get( "http://localhost/udaan2016/fms/api/index.php/count/registrations/events", function( data ) {
+
+        visualize_events_pie(data.result);
+
+    });
+
+</script>
 
 </body></html>

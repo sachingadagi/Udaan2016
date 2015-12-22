@@ -38,7 +38,9 @@ class EventMapper
 
         if ($sth->rowCount() > 0) {
             while ($ob = $sth->fetch()) {
-
+                #Strict type checking
+                #if ($ob instanceof \Event)
+                #$ob->setLogo( $this->logo = \Udaan\Config::getLogoDirectory().$ob->getLogo());
                 array_push($allEvents, $ob);
             }
 
@@ -65,7 +67,12 @@ class EventMapper
         if ($sth->rowCount() > 0) {
             while ($ob = $sth->fetch()) {
 
+                #Important
+                #if($ob instanceof \Event)
+                #$ob->setLogo( $this->logo = \Udaan\Config::getLogoDirectory().$ob->getLogo());
+
                 array_push($event, $ob);
+
             }
             return $event;
         } else {

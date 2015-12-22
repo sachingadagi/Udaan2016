@@ -2,14 +2,14 @@
 /**
  * Created by PhpStorm.
  * User: tuxer
- * Date: 12/7/2015
- * Time: 8:15 PM
+ * Date: 12/16/2015
+ * Time: 1:08 PM
  */
 
 namespace Udaan;
 
 
-class NonContingents {
+class Onspot {
     public $id;
     public $name;
     public $leader_email;
@@ -20,11 +20,6 @@ class NonContingents {
     public $leader_2_contact;
     public $registration_id;
     public $TYPE;
-
-    function __construct()
-    {
-    }
-
 
     /**
      * @return mixed
@@ -185,6 +180,7 @@ class NonContingents {
     {
         $this->TYPE = $TYPE;
     }
+
 
 
 }

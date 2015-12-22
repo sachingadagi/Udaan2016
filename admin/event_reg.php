@@ -9,7 +9,7 @@ header("location:index.php");
  include('db.php');
 $clgquery=mysql_query("SELECT name FROM college");
 $eventquery=mysql_query("SELECT name FROM event");
-
+require_once "$root/Udaan2016/fms/Config.php";
 $eventMapper = new \Udaan\EventMapper();
 //$submitted = false;
 if (isset($_POST['submitted']))
@@ -33,9 +33,47 @@ if (isset($_POST['submitted']))
     $headcontact = $_POST['contact'];
     $rule = $_POST['rules'];
     $db = \Udaan\Database::connect();
-    $sth = $db->prepare("INSERT INTO event(name,details,slogan,category,rules,start_date,end_date,start_time,end_time,group_size,fee_home,fee_remote,location,event_head_name,event_head_contact,equipments_provided,award) VALUES('$name','$details','$slogan','$category','$rule','$startdate','$enddate','$starttime','$endtime','$groupsize','$homefee','$remotefee','$location','$headname','$headcontact','$equipments','$firstprice')");
+
+    $file_name = "default.jpg";
+    if(isset($_FILES['image']))
+    {
+        $file_errors = array();
+        $file_name = $_FILES['image']['name'];
+        $file_size = $_FILES['image']['size'];
+        $file_tmp = $_FILES['image']['tmp_name'];
+        $file_type = $_FILES['image']['type'];
+
+        $value = explode(".", $file_name);
+        $file_ext = strtolower(array_pop($value));
+
+
+        $allowed_extensions= array("jpeg", "jpg", "png");
+
+        if (in_array($file_ext, $allowed_extensions) === false) {
+            $file_errors[] = "extension not allowed, please choose a JPEG or PNG file.";
+        }
+
+        # Checking for file size
+        if ($file_size > 2097152) {
+            $file_errors[] = 'File size must be less than 2 MB';
+        }
+        
+        if(move_uploaded_file($file_tmp, \Udaan\Config::getLogoDirectory() . $file_name))
+        {
+            echo "successfully moved file";
+
+        }
+        else
+
+        {
+            echo "failed moving file";
+        }
+
+    }
+    $sth = $db->prepare("INSERT INTO event(name,details,slogan,category,rules,start_date,end_date,start_time,end_time,group_size,fee_home,fee_remote,location,event_head_name,event_head_contact,equipments_provided,award,logo) VALUES('$name','$details','$slogan','$category','$rule','$startdate','$enddate','$starttime','$endtime','$groupsize','$homefee','$remotefee','$location','$headname','$headcontact','$equipments','$firstprice','$file_name')");
 
     $sth->execute();
+    
 
     header('Location: events.php');
 }
@@ -124,7 +162,7 @@ else {
                         <div class="col-sm-offset-3 col-sm-6 col-lg-6">
                 <div id="register-wraper">
 
-                 <form action="<?PHP echo $_SERVER['PHP_SELF']; ?>" method="post">
+                 <form action="<?PHP echo $_SERVER['PHP_SELF']; ?>" method="post"  enctype="multipart/form-data">
                     <legend>Event Register</legend>
                      <input type=hidden name=submitted value=1>
                      <div class="form group">
@@ -207,6 +245,10 @@ else {
                  <input type="text" class="form-control" id="equipments" placeholder="equipments" name="equipments">
                  </div> 
                  
+                  <div class="form-group">
+                 <label for="equipments">Image</label>
+                 <input type="file" class="form-control" id="name"  name="image">
+                 </div> 
                  
    				 <button type="submit" class="btn btn-primary" name="submit">Register Event</button>
 		         </form>

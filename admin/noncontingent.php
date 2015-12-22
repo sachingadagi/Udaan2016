@@ -79,9 +79,11 @@ $result = ($NonContingentMapper->getAll());
         <div class="navbar-collapse collapse">
             <ul class="nav navbar-nav">
                 <li><a href="college.php"><i class="icon-calendar icon-white"></i> Contingent</a></li>
-                <li><a href="noncontingent.php"><i class="icon-calendar icon-white"></i> Non Contingent/OnSpot</a></li>
+                <li><a href="noncontingent.php"><i class="icon-calendar icon-white"></i> Non Contingent</a></li>
+                <li><a href="onspot.php"><i class="icon-calendar icon-white"></i> OnSpot</a></li>
                 <li><a href="events.php"><i class="icon-th icon-white"></i> Events</a></li>
                 <li><a href="reports.php"><i class="icon-th icon-white"></i> Reports</a></li>
+                <li><a href="coordinators.php"><i class="icon-th icon-white"></i> Coordinator</a></li>
                 <li><a href="logout.php"><i class="icon-lock icon-white"></i> Logout</a></li>
 
             </ul>
